@@ -619,6 +619,7 @@ export class InstructorCourseEnrollPageComponent implements OnInit {
     }, () => {
       this.isLoadingCourseEnrollPage = false;
     });
+
     this.studentService.getStudentsFromCourse({ courseId: courseid }).subscribe((resp: Students) => {
       this.existingStudents = resp.students;
     }, (resp: ErrorMessageOutput) => {
