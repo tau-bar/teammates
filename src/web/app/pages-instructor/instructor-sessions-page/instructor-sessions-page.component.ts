@@ -52,6 +52,7 @@ import {
 import {
   SessionsPermanentDeletionConfirmModalComponent,
 } from './sessions-permanent-deletion-confirm-modal/sessions-permanent-deletion-confirm-modal.component';
+import { SearchParams } from './sessions-search-bar/sessions-search-bar.component';
 
 interface RecycleBinFeedbackSessionRowModel {
   feedbackSession: FeedbackSession;
@@ -141,6 +142,12 @@ export class InstructorSessionsPageComponent extends InstructorSessionModalPageC
   hasCourseLoadingFailed: boolean = false;
   hasFeedbackSessionLoadingFailed: boolean = false;
 
+  searchedSessionsTableRowModels: SessionsTableRowModel[] = [];
+  searchParams: SearchParams = {
+    searchKey: '',
+  };
+  isSearchView: boolean = false;
+
   constructor(statusMessageService: StatusMessageService,
               navigationService: NavigationService,
               feedbackSessionsService: FeedbackSessionsService,
@@ -172,6 +179,31 @@ export class InstructorSessionsPageComponent extends InstructorSessionModalPageC
     this.loadRecycleBinFeedbackSessions();
   }
 
+  search(): void {
+    if (this.searchParams.searchKey === '') {
+      this.clearSearch();
+      return;
+    }
+    this.isFeedbackSessionsLoading = true;
+    this.searchedSessionsTableRowModels = this.sessionsTableRowModels.filter((sessionRowModel) => {
+      return this.sessionRowModelIncludesSearchKey(sessionRowModel);
+    });
+    this.isSearchView = true;
+    this.isFeedbackSessionsLoading = false;
+  }
+
+  sessionRowModelIncludesSearchKey(sessionRowModel: SessionsTableRowModel): boolean {
+    const lowercaseSessionName = sessionRowModel.feedbackSession.feedbackSessionName.toLowerCase();
+    const lowercaseCourseId = sessionRowModel.feedbackSession.courseId.toLowerCase();
+    const lowercaseSearchKey = this.searchParams.searchKey.toLowerCase();
+    return lowercaseSessionName.includes(lowercaseSearchKey) || lowercaseCourseId.includes(lowercaseSearchKey);
+  }
+
+  clearSearch(): void {
+    this.searchParams.searchKey = '';
+    this.isSearchView = false;
+  }
+
   /**
    * Copies from other sessions.
    */
@@ -182,9 +214,13 @@ export class InstructorSessionsPageComponent extends InstructorSessionModalPageC
     modalRef.componentInstance.copyToCourseId = this.sessionEditFormModel.courseId;
 
     modalRef.componentInstance.courseCandidates = this.courseCandidates;
-    modalRef.componentInstance.existingFeedbackSession =
-        this.sessionsTableRowModels.map((model: SessionsTableRowModel) => model.feedbackSession);
-
+    if (this.isSearchView) {
+      modalRef.componentInstance.existingFeedbackSession =
+      this.searchedSessionsTableRowModels.map((model: SessionsTableRowModel) => model.feedbackSession);
+    } else {
+      modalRef.componentInstance.existingFeedbackSession =
+      this.sessionsTableRowModels.map((model: SessionsTableRowModel) => model.feedbackSession);
+    }
     modalRef.result.then((result: CopyFromOtherSessionsResult) => {
       this.copyFeedbackSession(result.fromFeedbackSession, result.newFeedbackSessionName, result.copyToCourseId,
         result.fromFeedbackSession.courseId)
@@ -404,7 +440,11 @@ export class InstructorSessionsPageComponent extends InstructorSessionModalPageC
     // reverse the sort order
     this.sessionsTableRowModelsSortOrder =
         this.sessionsTableRowModelsSortOrder === SortOrder.DESC ? SortOrder.ASC : SortOrder.DESC;
-    this.sessionsTableRowModels.sort(this.sortModelsBy(by, this.sessionsTableRowModelsSortOrder));
+    if (this.isSearchView) {
+      this.searchedSessionsTableRowModels.sort(this.sortModelsBy(by, this.sessionsTableRowModelsSortOrder));
+    } else {
+      this.sessionsTableRowModels.sort(this.sortModelsBy(by, this.sessionsTableRowModelsSortOrder));
+    }
   }
 
   /**
@@ -422,6 +462,9 @@ export class InstructorSessionsPageComponent extends InstructorSessionModalPageC
    * Loads response rate of a feedback session.
    */
   loadResponseRateEventHandler(rowIndex: number): void {
+    if (this.isSearchView) {
+      this.loadResponseRate(this.searchedSessionsTableRowModels[rowIndex]);
+    }
     this.loadResponseRate(this.sessionsTableRowModels[rowIndex]);
   }
 
@@ -480,11 +523,16 @@ export class InstructorSessionsPageComponent extends InstructorSessionModalPageC
   copySessionEventHandler(result: CopySessionResult): void {
     this.isCopySessionLoading = true;
     this.failedToCopySessions = {};
-    const requestList: Observable<FeedbackSession>[] = this.createSessionCopyRequestsFromRowModel(
+    const requestList: Observable<FeedbackSession>[] = this.isSearchView
+    ? this.createSessionCopyRequestsFromRowModel(
+      this.searchedSessionsTableRowModels[result.sessionToCopyRowIndex], result)
+    : this.createSessionCopyRequestsFromRowModel(
         this.sessionsTableRowModels[result.sessionToCopyRowIndex], result);
+
     if (requestList.length === 1) {
       this.copySingleSession(requestList[0]);
     }
+
     if (requestList.length > 1) {
       forkJoin(requestList).pipe(finalize(() => {
         this.isCopySessionLoading = false;
@@ -510,6 +558,10 @@ export class InstructorSessionsPageComponent extends InstructorSessionModalPageC
    * Submits the feedback session as instructor.
    */
   submitSessionAsInstructorEventHandler(rowIndex: number): void {
+    if (this.isSearchView) {
+      this.submitSessionAsInstructor(this.searchedSessionsTableRowModels[rowIndex]);
+      return;
+    }
     this.submitSessionAsInstructor(this.sessionsTableRowModels[rowIndex]);
   }
 
@@ -517,6 +569,10 @@ export class InstructorSessionsPageComponent extends InstructorSessionModalPageC
    * Publishes a feedback session.
    */
   publishSessionEventHandler(rowIndex: number): void {
+    if (this.isSearchView) {
+      this.publishSession(this.searchedSessionsTableRowModels[rowIndex]);
+      return;
+    }
     this.publishSession(this.sessionsTableRowModels[rowIndex]);
   }
 
@@ -524,6 +580,10 @@ export class InstructorSessionsPageComponent extends InstructorSessionModalPageC
    * Unpublishes a feedback session.
    */
   unpublishSessionEventHandler(rowIndex: number): void {
+    if (this.isSearchView) {
+      this.unpublishSession(this.searchedSessionsTableRowModels[rowIndex]);
+      return;
+    }
     this.unpublishSession(this.sessionsTableRowModels[rowIndex]);
   }
 
@@ -531,6 +591,10 @@ export class InstructorSessionsPageComponent extends InstructorSessionModalPageC
    * Downloads the result of a feedback session in csv.
    */
   downloadSessionResultEventHandler(rowIndex: number): void {
+    if (this.isSearchView) {
+      this.downloadSessionResult(this.searchedSessionsTableRowModels[rowIndex]);
+      return;
+    }
     this.downloadSessionResult(this.sessionsTableRowModels[rowIndex]);
   }
 

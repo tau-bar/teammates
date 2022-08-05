@@ -132,7 +132,10 @@
 </div>
 
 <ng-template #noSessionMessage>
-  <div class="no-session-message">
+  <div *ngIf="!isSearchView" class="no-session-message">
     There are no feedback sessions in this course.
+  </div>
+  <div *ngIf="isSearchView" class="no-session-message">
+    No search results found.
   </div>
 </ng-template>

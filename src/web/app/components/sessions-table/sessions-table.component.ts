@@ -35,6 +35,9 @@ export class SessionsTableComponent {
   rowClicked: number = -1;
 
   @Input()
+  isSearchView: boolean = false;
+
+  @Input()
   sessionsTableRowModels: SessionsTableRowModel[] = [];
 
   @Input()

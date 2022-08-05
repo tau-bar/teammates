@@ -23,11 +23,20 @@
                   (retryEvent)="retryLoadingAllData()">
   <div class="margin-top-30px">
     <div *tmIsLoading="isCoursesLoading || isMoveToRecycleBinLoading || isCopySessionLoading || isResultActionLoading">
-      <div class="alert alert-warning margin-top-30px" role="alert" *ngIf="sessionsTableRowModels.length === 0 && !isFeedbackSessionsLoading">
+      <div class="alert alert-warning margin-top-30px" role="alert" *ngIf="sessionsTableRowModels.length === 0 && !isFeedbackSessionsLoading && !isSearchView">
         You have not created any sessions yet. Use the form above to create a session.
       </div>
+      <div class="row">
+        <div class="col-12 text-muted">
+          <p>
+            Search for keywords in the course ID or session name:
+          </p>
+        </div>
+      </div>
+      <tm-sessions-search-bar (searched)="search()" (clearSearchPress)="clearSearch()" [(searchParams)]="searchParams" [isSearchView]="isSearchView"></tm-sessions-search-bar>
       <tm-sessions-table *tmIsLoading="isFeedbackSessionsLoading"
-                         [sessionsTableRowModels]="sessionsTableRowModels" [sessionsTableRowModelsSortBy]="sessionsTableRowModelsSortBy" [sessionsTableRowModelsSortOrder]="sessionsTableRowModelsSortOrder"
+                         [isSearchView]="isSearchView"
+                         [sessionsTableRowModels]="isSearchView ? searchedSessionsTableRowModels : sessionsTableRowModels" [sessionsTableRowModelsSortBy]="sessionsTableRowModelsSortBy" [sessionsTableRowModelsSortOrder]="sessionsTableRowModelsSortOrder"
                          [courseCandidates]="courseCandidates" [columnsToShow]="[ SessionsTableColumn.COURSE_ID ]"
                          [headerColorScheme]="SessionsTableHeaderColorScheme.BLUE"
                          [isSendReminderLoading]="isSendReminderLoading"
@@ -37,9 +46,9 @@
                          (submitSessionAsInstructorEvent)="submitSessionAsInstructorEventHandler($event)"
                          (publishSessionEvent)="publishSessionEventHandler($event)" (unpublishSessionEvent)="unpublishSessionEventHandler($event)"
                          (downloadSessionResultsEvent)="downloadSessionResultEventHandler($event)"
-                         (resendResultsLinkToStudentsEvent)="resendResultsLinkToRespondentsEventHandler(sessionsTableRowModels[$event])"
-                         (sendRemindersToAllNonSubmittersEvent)="sendRemindersToRespondentsEventHandler(sessionsTableRowModels[$event], true)"
-                         (sendRemindersToSelectedNonSubmittersEvent)="sendRemindersToRespondentsEventHandler(sessionsTableRowModels[$event], false)"></tm-sessions-table>
+                         (resendResultsLinkToStudentsEvent)="isSearchView ? resendResultsLinkToRespondentsEventHandler(searchedSessionsTableRowModels[$event]) : resendResultsLinkToRespondentsEventHandler(sessionsTableRowModels[$event])"
+                         (sendRemindersToAllNonSubmittersEvent)="isSearchView ? sendRemindersToRespondentsEventHandler(searchedSessionsTableRowModels[$event], true) : sendRemindersToRespondentsEventHandler(sessionsTableRowModels[$event], true)"
+                         (sendRemindersToSelectedNonSubmittersEvent)="isSearchView ? sendRemindersToRespondentsEventHandler(searchedSessionsTableRowModels[$event], false) : sendRemindersToRespondentsEventHandler(sessionsTableRowModels[$event], false)"></tm-sessions-table>
     </div>
   </div>
   <br/>
