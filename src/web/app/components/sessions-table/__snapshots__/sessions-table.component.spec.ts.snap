@@ -13,6 +13,7 @@ exports[`SessionsTableComponent should snap like in home page with 2 sessions so
   courseCandidates={[Function Array]}
   downloadSessionResultsEvent={[Function EventEmitter_]}
   headerColorScheme="0"
+  isSearchView="false"
   isSendReminderLoading="false"
   loadResponseRateEvent={[Function EventEmitter_]}
   moveSessionToRecycleBinEvent={[Function EventEmitter_]}
@@ -492,6 +493,7 @@ exports[`SessionsTableComponent should snap like in sessions page with 2 session
   courseCandidates={[Function Array]}
   downloadSessionResultsEvent={[Function EventEmitter_]}
   headerColorScheme="0"
+  isSearchView="false"
   isSendReminderLoading="false"
   loadResponseRateEvent={[Function EventEmitter_]}
   moveSessionToRecycleBinEvent={[Function EventEmitter_]}
@@ -942,6 +944,7 @@ exports[`SessionsTableComponent should snap with default fields 1`] = `
   courseCandidates={[Function Array]}
   downloadSessionResultsEvent={[Function EventEmitter_]}
   headerColorScheme="0"
+  isSearchView="false"
   isSendReminderLoading="false"
   loadResponseRateEvent={[Function EventEmitter_]}
   moveSessionToRecycleBinEvent={[Function EventEmitter_]}

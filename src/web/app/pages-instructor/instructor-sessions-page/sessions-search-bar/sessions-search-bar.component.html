@@ -1,0 +1,26 @@
+<div class="form-group">
+  <div class="input-group">
+    <input
+      type="text"
+      id="search-keyword"
+      class="form-control"
+      [ngModel]="searchParams.searchKey"
+      (ngModelChange)="onSearchKeyChange($event)"
+      (keyup.enter)="search()"
+      placeholder="Search for a course"
+    />
+    <div class="input-group-append">
+      <button
+        class="btn btn-primary"
+        id="btn-search"
+        (click)="search()"
+        [disabled]="searchParams.searchKey === ''"
+      >
+        Search
+      </button>
+      <button class="btn btn-secondary" (click)="clearSearch()" [disabled]="!isSearchView">
+        Clear Search
+      </button>
+    </div>
+  </div>
+</div>
