@@ -1,13 +1,16 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
+import { NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
 import { finalize } from 'rxjs/operators';
 import { AccountService } from '../../../services/account.service';
 import { CourseService } from '../../../services/course.service';
 import { InstructorService } from '../../../services/instructor.service';
 import { NavigationService } from '../../../services/navigation.service';
+import { SimpleModalService } from '../../../services/simple-modal.service';
 import { StatusMessageService } from '../../../services/status-message.service';
 import { StudentService } from '../../../services/student.service';
 import { Account, Course, Courses } from '../../../types/api-output';
+import { SimpleModalType } from '../../components/simple-modal/simple-modal-type';
 import { ErrorMessageOutput } from '../../error-message-output';
 
 /**
@@ -39,6 +42,7 @@ export class AdminAccountsPageComponent implements OnInit {
               private navigationService: NavigationService,
               private statusMessageService: StatusMessageService,
               private accountService: AccountService,
+              private simpleModalService: SimpleModalService,
               private courseService: CourseService) { }
 
   ngOnInit(): void {
@@ -120,16 +124,20 @@ export class AdminAccountsPageComponent implements OnInit {
   /**
    * Removes the instructor from course.
    */
-  removeInstructorFromCourse(courseId: string): void {
-    this.instructorService.deleteInstructor({
-      courseId,
-      instructorId: this.accountInfo.googleId,
-    }).subscribe(() => {
-      this.instructorCourses = this.instructorCourses.filter((course: Course) => course.courseId !== courseId);
-      this.statusMessageService.showSuccessToast(`Instructor is successfully deleted from course "${courseId}"`);
-    }, (resp: ErrorMessageOutput) => {
-      this.statusMessageService.showErrorToast(resp.error.message);
-    });
+   removeInstructorFromCourse(courseId: string): Promise<void> {
+    const modalRef: NgbModalRef = this.simpleModalService.openConfirmationModal(
+      'Warning: This instructor will be permanently deleted from this course.',
+      SimpleModalType.WARNING, 'Are you sure you want to continue?');
+    return modalRef.result.then(() => {
+      this.instructorService.deleteInstructor({
+        courseId,
+        instructorId: this.accountInfo.googleId,
+      }).subscribe(() => {
+        this.instructorCourses = this.instructorCourses.filter((course: Course) => course.courseId !== courseId);
+        this.statusMessageService.showSuccessToast(`Instructor is successfully deleted from course "${courseId}"`);
+      }, (resp: ErrorMessageOutput) => {
+        this.statusMessageService.showErrorToast(resp.error.message);
+      });
+      }).catch(() => {});
   }
-
 }
